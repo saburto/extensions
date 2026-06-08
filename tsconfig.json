@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "noEmit": true,
+    "paths": {
+      "@pi-extensions/pi-launcher": ["./extensions/pi-launcher/src/extension.ts"],
+      "@pi-extensions/mcp-image-saver": ["./extensions/mcp-image-saver/src/extension.ts"]
+    }
+  },
+  "include": [
+    "extensions/**/*.ts",
+    "packages/**/*.ts"
+  ]
+}
