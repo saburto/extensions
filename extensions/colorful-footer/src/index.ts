@@ -1,3 +1,3 @@
-import { colorfulFooter } from "@pi-extensions/colorful-footer";
+import { colorfulFooter } from "./extension";
 
 export default colorfulFooter;
