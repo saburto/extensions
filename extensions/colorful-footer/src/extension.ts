@@ -38,6 +38,25 @@ const THINKING: Record<string, { icon: string; color: ThemeColor }> = {
   xhigh:    { icon: "\u25cf", color: "thinkingXhigh" },    // ●
 };
 
+// ── Colorful Working Indicator ───────────────────────────────────────────
+
+/** Build a pill-style working message matching the footer aesthetic */
+function makeWorkingMessage(theme: Theme): string {
+  return theme.bg("toolPendingBg",
+    " " + theme.fg("accent", "\u2699\uFE0F") + " " + theme.fg("text", "Working...") + " ",
+  );
+}
+
+/** Build a spinner indicator using theme colors (no rainbow) */
+function makeSpinner(theme: Theme) {
+  const cols: ThemeColor[] = ["accent", "success", "warning", "thinkingHigh", "thinkingMedium"];
+  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  return {
+    frames: frames.map((f, i) => theme.fg(cols[i % cols.length], f)),
+    intervalMs: 80,
+  };
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 /** Format large numbers with k/M suffix */
@@ -71,6 +90,11 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
 
     enabled = true;
     thinkingLevel = pi.getThinkingLevel();
+
+    // Colorful working message + spinner shown while the agent is streaming
+    ctx.ui.setWorkingMessage(makeWorkingMessage(ctx.ui.theme));
+    ctx.ui.setWorkingIndicator(makeSpinner(ctx.ui.theme));
+
     ctx.ui.setFooter((tui, theme, footerData) => {
       const unsub = footerData.onBranchChange(() => tui.requestRender());
       requestRender = () => tui.requestRender();
@@ -242,6 +266,9 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
     handler: async (_args, ctx) => {
       if (enabled) {
         ctx.ui.setFooter(undefined);
+        // Reset working message + indicator to pi defaults
+        ctx.ui.setWorkingMessage(undefined);
+        ctx.ui.setWorkingIndicator(undefined);
         enabled = false;
         ctx.ui.notify("Default footer restored", "info");
       } else {
