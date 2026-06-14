@@ -1,5 +1,5 @@
 {
-  "name": "@pi-extensions/colorful-footer",
+  "name": "@saburto/pi-colorful-footer",
   "version": "0.0.1",
   "keywords": ["pi-package"],
   "files": ["src"],

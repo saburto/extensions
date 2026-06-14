@@ -22,7 +22,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Publish @pi-extensions/colorful-footer
-        run: pnpm publish --filter @pi-extensions/colorful-footer --no-git-checks --access public
+      - name: Publish @saburto/pi-colorful-footer
+        run: pnpm publish --filter @saburto/pi-colorful-footer --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
