@@ -33,6 +33,18 @@ importers:
         specifier: ^3.0.0
         version: 3.2.6(@types/node@25.9.2)(jiti@2.7.0)(yaml@2.9.0)
 
+  extensions/colorful-footer:
+    dependencies:
+      '@earendil-works/pi-ai':
+        specifier: '*'
+        version: 0.79.0(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent':
+        specifier: '*'
+        version: 0.79.0(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-tui':
+        specifier: '*'
+        version: 0.79.0
+
   extensions/mcp-image-saver:
     dependencies:
       '@earendil-works/pi-coding-agent':
