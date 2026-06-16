@@ -1,7 +1,8 @@
 {
   "name": "@saburto/pi-colorful-footer",
-  "version": "0.0.1",
-  "keywords": ["pi-package"],
+  "version": "0.0.2",
+  "keywords": ["pi-package", "footer", "agent", "extensions"],
+  "repository": "https://github.com/saburto/extensions/tree/main/extensions/colorful-footer",
   "files": ["src"],
   "type": "module",
   "exports": {
