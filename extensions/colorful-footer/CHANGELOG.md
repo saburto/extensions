@@ -2,6 +2,13 @@
 
 ## [0.1.0](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.0.3...pi-colorful-footer-v0.1.0) (2026-06-20)
 
+
+### Features
+
+* add config ([d8ba4b0](https://github.com/saburto/extensions/commit/d8ba4b0a76b55d80eea12e2b8ba537e306d29dd4))
+
+## [0.1.0](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.0.3...pi-colorful-footer-v0.1.0) (2026-06-20)
+
 ### Features
 
 * Add configuration file support (~/.pi/agent/colorful-footer.json and .pi/colorful-footer.json)
