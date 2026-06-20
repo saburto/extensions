@@ -1,9 +1,13 @@
 {
   "name": "@saburto/pi-launcher",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
-  "keywords": ["pi-package"],
-  "files": ["src"],
+  "keywords": [
+    "pi-package"
+  ],
+  "files": [
+    "src"
+  ],
   "type": "module",
   "exports": {
     ".": "./src/extension.ts"
@@ -26,6 +30,8 @@
     }
   },
   "pi": {
-    "extensions": ["./src/index.ts"]
+    "extensions": [
+      "./src/index.ts"
+    ]
   }
 }
