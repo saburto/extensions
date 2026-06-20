@@ -1,0 +1,52 @@
+{
+  "icons": {
+    "model": "🤖",
+    "folder": "📁",
+    "git": "🌱",
+    "tokensIn": "↑",
+    "tokensOut": "↓",
+    "cache": "💾",
+    "context": "📊",
+    "cost": "💰",
+    "thinking": "🧠"
+  },
+  "sections": {
+    "cost": {
+      "hidden": false,
+      "bgColor": "selectedBg",
+      "fgColor": "mdHeading"
+    }
+  },
+  "rules": [
+    {
+      "models": ["claude-opus*", "claude-opus-4*"],
+      "priority": 10,
+      "sections": {
+        "model": {
+          "bgColor": "toolErrorBg",
+          "fgColor": "error"
+        }
+      }
+    },
+    {
+      "models": ["deepseek*"],
+      "priority": 10,
+      "sections": {
+        "model": {
+          "bgColor": "toolSuccessBg",
+          "fgColor": "success"
+        }
+      }
+    },
+    {
+      "models": ["*sonnet*"],
+      "priority": 5,
+      "sections": {
+        "model": {
+          "bgColor": "toolPendingBg",
+          "fgColor": "warning"
+        }
+      }
+    }
+  ]
+}

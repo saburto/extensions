@@ -2,53 +2,52 @@
  * Colorful Footer Extension — replaces the default footer with a vibrant,
  * icon-rich status bar using emoji icons and theme-colored backgrounds.
  *
- * Layout:  [🤖 model] [📁 folder] [🌱 branch] [↑in ↓out] [💾cache hit%] [📊ctx%] [💰cost] [🧠thinking]
+ * Configurable via JSON files:
+ *   ~/.pi/agent/colorful-footer.json  (global)
+ *   .pi/colorful-footer.json          (project-local)
  *
- * Uses emoji icons — works in any modern terminal without Nerd Fonts.
+ * Supports icon overrides, color customization, conditional rules based on
+ * model matching, and section visibility control.
  */
 
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Theme, type ThemeColor } from "@earendil-works/pi-coding-agent";
-
-type ThemeBg = Parameters<Theme["bg"]>[0];
+import type { ExtensionAPI, ThemeColor } from "@earendil-works/pi-coding-agent";
+import { Theme } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import {
+  loadConfig,
+  resolveConfig,
+  resolveSections,
+  resolveThinking,
+  resolveFg,
+  resolveBg,
+  getTokensOutIcon,
+  type ColorfulFooterConfig,
+  type EffectiveSection,
+  type ThinkingLevelConfig,
+} from "./config";
+import { readFileSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-// ── Emoji icons ──────────────────────────────────────────────────────────
-// All icons are standard emoji — no Nerd Font required.
-
-const ICONS = {
-  model: "\u{1F916}",       // 🤖 robot face
-  folder: "\u{1F4C1}",      // 📁 file folder → current directory
-  git: "\u{1F331}",         // 🌱 seedling → git branch
-  tokensIn: "\u2191",        // ↑ up arrow
-  tokensOut: "\u2193",       // ↓ down arrow
-  cache: "\u{1F4BE}",        // 💾 floppy disk → cache/storage
-  context: "\u{1F4CA}",      // 📊 bar chart → context usage
-  cost: "\u{1F4B0}",         // 💰 money bag
-  thinking: "\u{1F9E0}",     // 🧠 brain
-} as const;
-
-// Thinking level → icon + color (paired with 🧠 prefix)
-const THINKING: Record<string, { icon: string; color: ThemeColor }> = {
-  off:      { icon: "\u25cb", color: "muted" },              // ○
-  minimal:  { icon: "\u25d0", color: "thinkingMinimal" },  // ◐
-  low:      { icon: "\u25d1", color: "thinkingLow" },      // ◑
-  medium:   { icon: "\u25d2", color: "thinkingMedium" },   // ◒
-  high:     { icon: "\u25d3", color: "thinkingHigh" },     // ◓
-  xhigh:    { icon: "\u25cf", color: "thinkingXhigh" },    // ●
+const THINKING_BG: Record<string, string> = {
+  off:      "userMessageBg",
+  minimal:  "userMessageBg",
+  low:      "userMessageBg",
+  medium:   "toolPendingBg",
+  high:     "toolPendingBg",
+  xhigh:    "toolErrorBg",
 };
 
 // ── Colorful Working Indicator ───────────────────────────────────────────
 
-/** Build a pill-style working message matching the footer aesthetic */
 function makeWorkingMessage(theme: Theme): string {
   return theme.bg("toolPendingBg",
     " " + theme.fg("accent", "\u2699\uFE0F") + " " + theme.fg("text", "Working...") + " ",
   );
 }
 
-/** Build a spinner indicator using theme colors (no rainbow) */
 function makeSpinner(theme: Theme) {
   const cols: ThemeColor[] = ["accent", "success", "warning", "thinkingHigh", "thinkingMedium"];
   const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -58,41 +57,71 @@ function makeSpinner(theme: Theme) {
   };
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────
 
-/** Format large numbers with k/M suffix */
 function fmtTokens(n: number): string {
   if (n < 1000) return `${n}`;
   if (n < 1_000_000) return `${(n / 1000).toFixed(1)}k`;
   return `${(n / 1_000_000).toFixed(1)}M`;
 }
 
-/** Wrap text in a colored background "pill" */
-function pill(theme: Theme, bgColor: ThemeBg, content: string): string {
-  return theme.bg(bgColor, " " + content + " ");
+function pill(theme: Theme, bgColor: string | undefined, fallback: string, content: string): string {
+  return resolveBg(bgColor, theme, fallback, " " + content + " ");
 }
 
-// ── Extension ─────────────────────────────────────────────────────────────
+// ── Section Rendering Helpers ────────────────────────────────────────────
+
+interface FooterContext {
+  sections: EffectiveSection[];
+  tokensOutIcon: string;
+  thinking: Record<string, ThinkingLevelConfig>;
+  separator: string;
+  separatorColor: string;
+  config: ColorfulFooterConfig;
+}
+
+/** Get colored icon (respects hex or theme color, falls back to theme name). */
+function iconFg(sec: EffectiveSection, theme: Theme, fallback: string, text?: string): string {
+  return resolveFg(sec.fgColor, theme, fallback, text ?? sec.icon);
+}
+
+/** Get colored label text (respects hex or theme color, defaults to muted). */
+function labelFg(sec: EffectiveSection, theme: Theme, text: string): string {
+  return resolveFg(sec.labelColor, theme, "muted", text);
+}
+
+// ── Extension ────────────────────────────────────────────────────────────
 
 export const colorfulFooter = (pi: ExtensionAPI) => {
   let thinkingLevel = "off";
   let enabled = false;
   let requestRender: (() => void) | null = null;
+  let baseConfig: ColorfulFooterConfig = loadConfig(process.cwd());
 
-  // Track thinking level changes and trigger footer re-render
+  // Re-resolve when model changes
+  let modelId = "";
+
+  pi.on("model_select", async (event) => {
+    modelId = event.model.id;
+    requestRender?.();
+  });
+
   pi.on("thinking_level_select", async (event) => {
     thinkingLevel = event.level;
     requestRender?.();
   });
 
-  // Enable colorful footer on session start
   pi.on("session_start", async (_event, ctx) => {
     if (enabled) return;
 
     enabled = true;
     thinkingLevel = pi.getThinkingLevel();
+    modelId = ctx.model?.id ?? "";
 
-    // Compute folder display: repo root name if in a git repo, otherwise cwd without $HOME
+    // Reload config at session start
+    baseConfig = loadConfig(ctx.cwd);
+
+    // Compute folder display
     let folderDisplay: string;
     const cwd = ctx.cwd;
     const home = process.env.HOME || '';
@@ -115,7 +144,6 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
         : cwd;
     }
 
-    // Colorful working message + spinner shown while the agent is streaming
     ctx.ui.setWorkingMessage(makeWorkingMessage(ctx.ui.theme));
     ctx.ui.setWorkingIndicator(makeSpinner(ctx.ui.theme));
 
@@ -130,6 +158,24 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
         },
         invalidate() {},
         render(width: number): string[] {
+          // Resolve effective config for current model
+          const cfg = resolveConfig(baseConfig, modelId);
+          const sections = resolveSections(cfg);
+          const thinking = resolveThinking(cfg);
+          const sep = cfg.separator ?? " │ ";
+          const sepColor = cfg.separatorColor ?? "dim";
+          const tokOutIcon = getTokensOutIcon(cfg);
+
+          // Build the footer context
+          const fctx: FooterContext = {
+            sections,
+            tokensOutIcon: tokOutIcon,
+            thinking,
+            separator: sep,
+            separatorColor: sepColor,
+            config: cfg,
+          };
+
           // ── Compute token stats ──────────────────────────────────
           let tokensIn = 0;
           let tokensOut = 0;
@@ -150,145 +196,149 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
           const branch = footerData.getGitBranch();
           const modelLabel = ctx.model?.id ?? "no-model";
           const currentLevel = thinkingLevel;
-          const think = THINKING[currentLevel] ?? THINKING.off;
+          const think = thinking[currentLevel] ?? thinking.off;
 
-          // ── Build sections ───────────────────────────────────────
-          const sections: string[] = [];
+          // ── Build sections in configured order ───────────────────
+          const active: string[] = [];
 
-          // 1. Model
-          sections.push(
-            pill(theme, "toolPendingBg",
-              theme.fg("accent", ICONS.model) + " " + theme.fg("muted", modelLabel),
-            ),
-          );
+          for (const sec of sections) {
+            if (sec.hidden) continue;
 
-          // 2. Current folder
-          sections.push(
-            pill(theme, "userMessageBg",
-              theme.fg("success", ICONS.folder) + " " + theme.fg("muted", folderDisplay),
-            ),
-          );
+            switch (sec.key) {
+              // 1. Model
+              case "model":
+                active.push(
+                  pill(theme, sec.bgColor, "toolPendingBg",
+                    iconFg(sec, theme, "accent") + " " + labelFg(sec, theme, modelLabel),
+                  ),
+                );
+                break;
 
-          // 3. Git branch
-          if (branch) {
-            sections.push(
-              pill(theme, "toolSuccessBg",
-                theme.fg("success", ICONS.git) + " " + theme.fg("muted", branch),
-              ),
-            );
+              // 2. Folder
+              case "folder":
+                active.push(
+                  pill(theme, sec.bgColor, "userMessageBg",
+                    iconFg(sec, theme, "success") + " " + labelFg(sec, theme, folderDisplay),
+                  ),
+                );
+                break;
+
+              // 3. Git branch
+              case "git":
+                if (branch) {
+                  active.push(
+                    pill(theme, sec.bgColor, "toolSuccessBg",
+                      iconFg(sec, theme, "success") + " " + labelFg(sec, theme, branch),
+                    ),
+                  );
+                }
+                break;
+
+              // 4. Token stats
+              case "tokens": {
+                const inIcon = sec.icon;
+                const outIcon = fctx.tokensOutIcon;
+                const inFg = resolveFg(sec.fgColor, theme, "warning", inIcon + fmtTokens(tokensIn));
+                const outFg = theme.fg("dim", outIcon + fmtTokens(tokensOut));
+                active.push(
+                  pill(theme, sec.bgColor, "userMessageBg", inFg + " " + outFg),
+                );
+                break;
+              }
+
+              // 5. Cache
+              case "cache":
+                if (cacheRead > 0) {
+                  const totalInput = cacheRead + tokensIn;
+                  const hitRate = totalInput > 0 ? Math.round((cacheRead / totalInput) * 100) : 0;
+                  const cacheColor = hitRate >= 30 ? "text" : "dim";
+                  const cacheBg = hitRate >= 30 ? "toolSuccessBg" : "selectedBg";
+                  active.push(
+                    pill(theme, sec.bgColor, cacheBg,
+                      iconFg(sec, theme, cacheColor) + " " +
+                        labelFg(sec, theme, fmtTokens(cacheRead) + " " + hitRate + "%"),
+                    ),
+                  );
+                }
+                break;
+
+              // 6. Context usage
+              case "context": {
+                const ctxUsage = ctx.getContextUsage();
+                const ctxWindow = ctx.model?.contextWindow;
+                if (ctxUsage?.tokens && ctxWindow && ctxWindow > 0) {
+                  const pct = Math.round((ctxUsage.tokens / ctxWindow) * 100);
+                  const used = fmtTokens(ctxUsage.tokens);
+                  const total = fmtTokens(ctxWindow);
+                  const ctxBg = pct > 80 ? "toolErrorBg" : pct > 50 ? "toolPendingBg" : "toolSuccessBg";
+                  active.push(
+                    pill(theme, sec.bgColor, ctxBg,
+                      iconFg(sec, theme, "text") + " " +
+                        labelFg(sec, theme, used + "/" + total + " (" + pct + "%)"),
+                    ),
+                  );
+                }
+                break;
+              }
+
+              // 7. Cost
+              case "cost":
+                active.push(
+                  pill(theme, sec.bgColor, "selectedBg",
+                    iconFg(sec, theme, "mdHeading") + " " +
+                      labelFg(sec, theme, "$" + totalCost.toFixed(3)),
+                  ),
+                );
+                break;
+
+              // 8. Thinking level
+              case "thinking": {
+                const tBg = sec.bgColor ?? THINKING_BG[currentLevel] ?? "userMessageBg";
+                active.push(
+                  pill(theme, tBg, "userMessageBg",
+                    iconFg(sec, theme, think.color ?? "thinkingOff") + " " +
+                      labelFg(sec, theme, (think.icon ?? "") + " " + currentLevel),
+                  ),
+                );
+                break;
+              }
+            }
           }
-
-          // 4. Token stats
-          sections.push(
-            pill(theme, "userMessageBg",
-              theme.fg("warning", ICONS.tokensIn + fmtTokens(tokensIn)) +
-                " " +
-                theme.fg("dim", ICONS.tokensOut + fmtTokens(tokensOut)),
-            ),
-          );
-
-          // 5. Cache
-          if (cacheRead > 0) {
-            const totalInput = cacheRead + tokensIn;
-            const hitRate = totalInput > 0 ? Math.round((cacheRead / totalInput) * 100) : 0;
-            const cacheColor: ThemeColor = hitRate >= 30 ? "text" : "dim";
-            const cacheBg: ThemeBg = hitRate >= 30 ? "toolSuccessBg" : "selectedBg";
-            sections.push(
-              pill(theme, cacheBg,
-                theme.fg(cacheColor, ICONS.cache + fmtTokens(cacheRead)) +
-                  " " +
-                  theme.fg("dim", hitRate + "%"),
-              ),
-            );
-          }
-
-          // 6. Context usage
-          const ctxUsage = ctx.getContextUsage();
-          const ctxWindow = ctx.model?.contextWindow;
-          if (ctxUsage?.tokens && ctxWindow && ctxWindow > 0) {
-            const pct = Math.round((ctxUsage.tokens / ctxWindow) * 100);
-            const used = fmtTokens(ctxUsage.tokens);
-            const total = fmtTokens(ctxWindow);
-            const ctxColor: ThemeColor = "text";
-            const ctxBg: ThemeBg = pct > 80 ? "toolErrorBg" : pct > 50 ? "toolPendingBg" : "toolSuccessBg";
-            sections.push(
-              pill(theme, ctxBg,
-                theme.fg(ctxColor, ICONS.context + " " + used + "/" + total) +
-                  " " +
-                  theme.fg("dim", "(" + pct + "%)"),
-              ),
-            );
-          }
-
-          // 7. Cost
-          sections.push(
-            pill(theme, "selectedBg",
-              theme.fg("mdHeading", ICONS.cost + "$" + totalCost.toFixed(3)),
-            ),
-          );
-
-          // 8. Thinking level
-          const thinkBg: ThemeBg =
-            currentLevel === "xhigh" ? "toolErrorBg" :
-            currentLevel === "high" ? "toolPendingBg" :
-            "userMessageBg";
-          sections.push(
-            pill(theme, thinkBg,
-              theme.fg(think.color, ICONS.thinking + " " + think.icon + " " + currentLevel),
-            ),
-          );
 
           // ── Join with separator ─────────────────────────────────
-          let sep = theme.fg("dim", " │ ");
-          let line = sections.join(sep);
+          let sepStr = resolveFg(fctx.separatorColor, theme, "dim", fctx.separator);
+          let line = active.join(sepStr);
           if (visibleWidth(line) > width) {
-            sep = theme.fg("dim", "│");
-            line = sections.join(sep);
+            sepStr = resolveFg(fctx.separatorColor, theme, "dim", "│");
+            line = active.join(sepStr);
           }
 
-          // Progressively drop sections until the line fits.
-          let pruned = [...sections];
-          if (visibleWidth(line) > width) {
-            pruned = pruned.filter((s) => !s.includes(ICONS.context));
-            line = pruned.join(sep);
-          }
-          if (visibleWidth(line) > width) {
-            pruned = pruned.filter((s) => !s.includes(ICONS.cache));
-            line = pruned.join(sep);
-          }
-          if (visibleWidth(line) > width) {
-            const costIdx = pruned.findIndex((s) => s.includes(ICONS.cost));
-            if (costIdx >= 0) {
-              pruned.splice(costIdx, 1);
-              line = pruned.join(sep);
+          // Progressively drop sections until the line fits
+          let pruned = [...active];
+          // Drop order: context → cache → cost → tokens → thinking → git → folder → model
+          const dropOrder = ["context", "cache", "cost", "tokens", "thinking", "git", "folder"];
+          for (const sectionKey of dropOrder) {
+            if (visibleWidth(line) <= width) break;
+            const idx = pruned.findIndex((s) => {
+              const sec = sections.find(ss => ss.key === sectionKey);
+              if (!sec) return false;
+              // Match by icon
+              return s.includes(sec.icon);
+            });
+            if (idx >= 0) {
+              pruned.splice(idx, 1);
+              line = pruned.join(sepStr);
             }
           }
+          // Last resort: drop model (should rarely happen)
           if (visibleWidth(line) > width) {
-            const tokIdx = pruned.findIndex((s) => s.includes(ICONS.tokensIn));
-            if (tokIdx >= 0) {
-              pruned.splice(tokIdx, 1);
-              line = pruned.join(sep);
-            }
-          }
-          if (visibleWidth(line) > width) {
-            const thinkIdx = pruned.findIndex((s) => s.includes(ICONS.thinking));
-            if (thinkIdx >= 0) {
-              pruned.splice(thinkIdx, 1);
-              line = pruned.join(sep);
-            }
-          }
-          if (visibleWidth(line) > width) {
-            const gitIdx = pruned.findIndex((s) => s.includes(ICONS.git));
-            if (gitIdx >= 0) {
-              pruned.splice(gitIdx, 1);
-              line = pruned.join(sep);
-            }
-          }
-          if (visibleWidth(line) > width) {
-            const folderIdx = pruned.findIndex((s) => s.includes(ICONS.folder));
-            if (folderIdx >= 0) {
-              pruned.splice(folderIdx, 1);
-              line = pruned.join(sep);
+            const modelSec = sections.find(s => s.key === "model");
+            if (modelSec) {
+              const idx = pruned.findIndex(s => s.includes(modelSec.icon));
+              if (idx >= 0) {
+                pruned.splice(idx, 1);
+                line = pruned.join(sepStr);
+              }
             }
           }
 
@@ -304,13 +354,78 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
     handler: async (_args, ctx) => {
       if (enabled) {
         ctx.ui.setFooter(undefined);
-        // Reset working message + indicator to pi defaults
         ctx.ui.setWorkingMessage(undefined);
         ctx.ui.setWorkingIndicator(undefined);
         enabled = false;
         ctx.ui.notify("Default footer restored", "info");
       } else {
         ctx.ui.notify("Use /reload to re-enable the colorful footer", "info");
+      }
+    },
+  });
+
+  // Chat-based config: inject README as context and let the LLM guide the user
+  pi.registerCommand("colorful-config", {
+    description: "Chat-based guide to customize the colorful footer",
+    handler: async (_args, ctx) => {
+      const globalPath = join(homedir(), ".pi", "agent", "colorful-footer.json");
+      const projectPath = join(ctx.cwd, ".pi", "colorful-footer.json");
+      const hasGlobal = existsSync(globalPath);
+      const hasProject = existsSync(projectPath);
+
+      // Read our own README to avoid duplicating documentation
+      const extDir = dirname(fileURLToPath(import.meta.url));
+      const readmePath = join(extDir, "..", "README.md");
+      let guide: string;
+      if (existsSync(readmePath)) {
+        guide = readFileSync(readmePath, "utf-8");
+      } else {
+        guide = `# Colorful Footer Configuration
+
+## Config files
+- Global: ~/.pi/agent/colorful-footer.json
+- Project: .pi/colorful-footer.json
+
+## Config schema
+- \`icons\`: override emoji per section (model, folder, git, tokensIn, tokensOut, cache, context, cost, thinking)
+- \`sections.<key>.hidden\`: true to hide a section
+- \`sections.<key>.bgColor\`: theme name (selectedBg, userMessageBg, customMessageBg, toolPendingBg, toolSuccessBg, toolErrorBg) or hex RGB like "#1a2b3c"
+- \`sections.<key>.fgColor\`: theme name (accent, success, error, warning, text, muted, dim, mdHeading, ...) or hex RGB
+- \`sections.<key>.labelColor\`: theme name or hex RGB for the text label
+- \`sections.<key>.order\`: integer sort order (lower = left)
+- \`separator\`: string between sections (default " │ ")
+- \`separatorColor\`: theme name or hex RGB for the separator
+- \`thinking.off/minimal/low/medium/high/xhigh\`: { icon, color } per level
+- \`rules[]\`: conditional overrides when model ID matches a glob pattern
+  - \`models\`: ["claude-opus*", "deepseek*"]
+  - \`priority\`: higher wins when multiple match
+  - \`sections\`: same per-section overrides as above`;
+      }
+
+      if (hasProject) {
+        const current = readFileSync(projectPath, "utf-8");
+        pi.sendUserMessage(
+          guide + "\n\n---\n\n" +
+          `You already have a project-local config at \`${projectPath}\`:\n\n\`\`\`json\n${current}\n\`\`\`\n\n` +
+          "What would you like to modify? " +
+          "You can also say \"reset to defaults\" to start fresh."
+        );
+      } else if (hasGlobal) {
+        const current = readFileSync(globalPath, "utf-8");
+        pi.sendUserMessage(
+          guide + "\n\n---\n\n" +
+          `You have a global config at \`${globalPath}\`:\n\n\`\`\`json\n${current}\n\`\`\`\n\n` +
+          "What would you like to modify? " +
+          "You can also say \"reset to defaults\" to start fresh, or create a project-local override."
+        );
+      } else {
+        pi.sendUserMessage(
+          guide + "\n\n---\n\n" +
+          "Please help me configure the colorful footer. " +
+          "Read any existing config files, ask me questions about my preferences, " +
+          "and edit the JSON config accordingly. " +
+          "When I'm happy with the result, ask whether to save and run /reload."
+        );
       }
     },
   });

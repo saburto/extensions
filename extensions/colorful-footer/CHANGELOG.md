@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.0](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.0.3...pi-colorful-footer-v0.1.0) (2026-06-20)
+
+### Features
+
+* Add configuration file support (~/.pi/agent/colorful-footer.json and .pi/colorful-footer.json)
+* Customizable icons, foreground/background colors per section (theme names + hex RGB like `#ff0000`)
+* Conditional rules based on model ID patterns (e.g. red for Opus, green for DeepSeek)
+* Hide individual sections via config
+* Section reordering via order field
+* Per-thinking-level icon/color overrides
+* `/colorful-config` chat-based configuration — feeds README as context, LLM guides the user conversationally and edits config files
+
 ## [0.0.3](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.0.2...pi-colorful-footer-v0.0.3) (2026-06-20)
 
 
