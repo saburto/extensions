@@ -1,6 +1,6 @@
 {
   "name": "@saburto/pi-launcher",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "keywords": ["pi-package"],
   "files": ["src"],
