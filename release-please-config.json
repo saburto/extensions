@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "changelog-sections": [
+    { "type": "feat", "section": "Features", "hidden": false },
+    { "type": "fix", "section": "Bug Fixes", "hidden": false },
+    { "type": "perf", "section": "Performance Improvements", "hidden": false },
+    { "type": "docs", "section": "Documentation", "hidden": false },
+    { "type": "chore", "section": "Miscellaneous", "hidden": false },
+    { "type": "refactor", "section": "Code Refactoring", "hidden": false },
+    { "type": "test", "section": "Tests", "hidden": false }
+  ],
+  "packages": {
+    "extensions/colorful-footer": {
+      "component": "pi-colorful-footer",
+      "release-type": "node"
+    },
+    "extensions/pi-launcher": {
+      "component": "pi-launcher",
+      "release-type": "node"
+    },
+    "extensions/mcp-image-saver": {
+      "component": "pi-mcp-image-saver",
+      "release-type": "node"
+    },
+    "extensions/pi-nvim-lsp": {
+      "component": "pi-nvim-lsp",
+      "release-type": "node"
+    }
+  }
+}

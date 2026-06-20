@@ -1,17 +1,20 @@
-name: Publish colorful-footer to npm
+name: Publish to npm
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 jobs:
-  publish:
+  publish-colorful-footer:
+    # Only run if the release tag matches the colorful-footer package
+    if: startsWith(github.event.release.tag_name, 'pi-colorful-footer')
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - uses: pnpm/action-setup@v4
 

@@ -1,0 +1,6 @@
+{
+  "extensions/colorful-footer": "0.0.2",
+  "extensions/pi-launcher": "0.0.1",
+  "extensions/mcp-image-saver": "0.0.1",
+  "extensions/pi-nvim-lsp": "0.0.0"
+}

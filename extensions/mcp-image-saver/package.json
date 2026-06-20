@@ -1,5 +1,5 @@
 {
-  "name": "@pi-extensions/mcp-image-saver",
+  "name": "@saburto/pi-mcp-image-saver",
   "version": "0.0.1",
   "private": true,
   "keywords": ["pi-package"],
