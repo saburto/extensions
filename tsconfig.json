@@ -13,7 +13,8 @@
     "noEmit": true,
     "paths": {
       "@pi-extensions/pi-launcher": ["./extensions/pi-launcher/src/extension.ts"],
-      "@pi-extensions/mcp-image-saver": ["./extensions/mcp-image-saver/src/extension.ts"]
+      "@pi-extensions/mcp-image-saver": ["./extensions/mcp-image-saver/src/extension.ts"],
+      "@pi-extensions/pi-nvim-lsp": ["./extensions/pi-nvim-lsp/src/extension.ts"]
     }
   },
   "include": [

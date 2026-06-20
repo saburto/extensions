@@ -2,7 +2,7 @@
  * Colorful Footer Extension — replaces the default footer with a vibrant,
  * icon-rich status bar using emoji icons and theme-colored backgrounds.
  *
- * Layout:  [🤖 model] [🌱 branch] [↑in ↓out] [💾cache hit%] [📊ctx%] [💰cost] [🧠thinking]
+ * Layout:  [🤖 model] [📁 folder] [🌱 branch] [↑in ↓out] [💾cache hit%] [📊ctx%] [💰cost] [🧠thinking]
  *
  * Uses emoji icons — works in any modern terminal without Nerd Fonts.
  */
@@ -19,6 +19,7 @@ import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 const ICONS = {
   model: "\u{1F916}",       // 🤖 robot face
+  folder: "\u{1F4C1}",      // 📁 file folder → current directory
   git: "\u{1F331}",         // 🌱 seedling → git branch
   tokensIn: "\u2191",        // ↑ up arrow
   tokensOut: "\u2193",       // ↓ down arrow
@@ -91,6 +92,29 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
     enabled = true;
     thinkingLevel = pi.getThinkingLevel();
 
+    // Compute folder display: repo root name if in a git repo, otherwise cwd without $HOME
+    let folderDisplay: string;
+    const cwd = ctx.cwd;
+    const home = process.env.HOME || '';
+    try {
+      const result = await pi.exec('git', ['rev-parse', '--show-toplevel'], {
+        cwd,
+        timeout: 2000,
+      });
+      if (result.code === 0 && result.stdout.trim()) {
+        const gitRoot = result.stdout.trim();
+        folderDisplay = gitRoot.split('/').pop() || gitRoot;
+      } else {
+        folderDisplay = home && cwd.startsWith(home)
+          ? '~' + cwd.slice(home.length)
+          : cwd;
+      }
+    } catch {
+      folderDisplay = home && cwd.startsWith(home)
+        ? '~' + cwd.slice(home.length)
+        : cwd;
+    }
+
     // Colorful working message + spinner shown while the agent is streaming
     ctx.ui.setWorkingMessage(makeWorkingMessage(ctx.ui.theme));
     ctx.ui.setWorkingIndicator(makeSpinner(ctx.ui.theme));
@@ -138,7 +162,14 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
             ),
           );
 
-          // 2. Git branch
+          // 2. Current folder
+          sections.push(
+            pill(theme, "userMessageBg",
+              theme.fg("success", ICONS.folder) + " " + theme.fg("muted", folderDisplay),
+            ),
+          );
+
+          // 3. Git branch
           if (branch) {
             sections.push(
               pill(theme, "toolSuccessBg",
@@ -147,7 +178,7 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
             );
           }
 
-          // 3. Token stats
+          // 4. Token stats
           sections.push(
             pill(theme, "userMessageBg",
               theme.fg("warning", ICONS.tokensIn + fmtTokens(tokensIn)) +
@@ -156,7 +187,7 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
             ),
           );
 
-          // 4. Cache
+          // 5. Cache
           if (cacheRead > 0) {
             const totalInput = cacheRead + tokensIn;
             const hitRate = totalInput > 0 ? Math.round((cacheRead / totalInput) * 100) : 0;
@@ -171,7 +202,7 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
             );
           }
 
-          // 5. Context usage
+          // 6. Context usage
           const ctxUsage = ctx.getContextUsage();
           const ctxWindow = ctx.model?.contextWindow;
           if (ctxUsage?.tokens && ctxWindow && ctxWindow > 0) {
@@ -189,14 +220,14 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
             );
           }
 
-          // 6. Cost
+          // 7. Cost
           sections.push(
             pill(theme, "selectedBg",
               theme.fg("mdHeading", ICONS.cost + "$" + totalCost.toFixed(3)),
             ),
           );
 
-          // 7. Thinking level
+          // 8. Thinking level
           const thinkBg: ThemeBg =
             currentLevel === "xhigh" ? "toolErrorBg" :
             currentLevel === "high" ? "toolPendingBg" :
@@ -250,6 +281,13 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
             const gitIdx = pruned.findIndex((s) => s.includes(ICONS.git));
             if (gitIdx >= 0) {
               pruned.splice(gitIdx, 1);
+              line = pruned.join(sep);
+            }
+          }
+          if (visibleWidth(line) > width) {
+            const folderIdx = pruned.findIndex((s) => s.includes(ICONS.folder));
+            if (folderIdx >= 0) {
+              pruned.splice(folderIdx, 1);
               line = pruned.join(sep);
             }
           }

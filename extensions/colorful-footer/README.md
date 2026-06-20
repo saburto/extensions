@@ -3,7 +3,7 @@
 Replaces the default pi footer with a vibrant, icon-rich status bar using emoji icons and theme-colored backgrounds. No Nerd Fonts required.
 
 ```
-🤖 claude-sonnet-4 │ 🌱 main │ ↑1.2k↓3k │ 💾500 45% │ 📊 8.5k/200k (4%) │ 💰$0.042 │ 🧠 ● xhigh
+🤖 claude-sonnet-4 │ 📁 extensions │ 🌱 main │ ↑1.2k↓3k │ 💾500 45% │ 📊 8.5k/200k (4%) │ 💰$0.042 │ 🧠 ● xhigh
 ```
 
 ## Features
@@ -13,12 +13,14 @@ Replaces the default pi footer with a vibrant, icon-rich status bar using emoji 
 - **Responsive pruning** — sections drop progressively as the terminal narrows
 - **Working indicator** — replaces the default spinner and "Working..." message with themed variants
 - **Thinking level display** — shows current thinking level with a colored circle indicator
+- **Current folder** — shows repo root name (if in a git repo) or the working directory without `$HOME`
 
 ### Footer Sections
 
 | Section | Icon | Description |
 |---------|------|-------------|
 | Model | 🤖 | Current model ID |
+| Folder | 📁 | Git repo root folder name, or cwd without $HOME |
 | Git branch | 🌱 | Active git branch (hidden if not in a repo) |
 | Tokens | ↑↓ | Input and output token counts |
 | Cache | 💾 | Cache read count and hit rate (hidden when empty) |

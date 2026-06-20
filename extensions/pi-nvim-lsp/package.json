@@ -1,0 +1,20 @@
+{
+  "name": "pi-nvim-lsp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest --run",
+    "test:unit": "vitest --run test/bridge.unit.test.ts",
+    "test:integration": "NEOVIM_INTEGRATION=1 vitest --run test/bridge.integration.test.ts",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "typescript": "^5.8.0",
+    "vitest": "^3.0.0"
+  }
+}
