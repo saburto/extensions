@@ -28,6 +28,7 @@ Replaces the default pi footer with a vibrant, icon-rich status bar using emoji 
 | Context | 📊 | Context window usage fraction and percentage (hidden when unavailable) |
 | Cost | 💰 | Total session cost in USD |
 | Thinking | 🧠 | Current thinking level with circle indicator |
+| Extensions | 🔌 | Status messages from other extensions (via setStatus) |
 
 ## Installation
 
@@ -100,9 +101,8 @@ interface ColorfulFooterConfig {
     context?: string;
     cost?: string;
     thinking?: string;
+    statuses?: string;
   };
-
-  /** Per-section visibility, colors, and ordering. */
   sections?: {
     model?: SectionConfig;
     folder?: SectionConfig;
@@ -112,9 +112,8 @@ interface ColorfulFooterConfig {
     context?: SectionConfig;
     cost?: SectionConfig;
     thinking?: SectionConfig;
+    statuses?: SectionConfig;
   };
-
-  /** Override thinking-level icons and colors. */
   thinking?: {
     off?:     { icon?: string; color?: string };
     minimal?: { icon?: string; color?: string };
@@ -232,6 +231,16 @@ Hide the cost and cache sections to save space:
   "sections": {
     "cost": { "hidden": true },
     "cache": { "hidden": true }
+  }
+}
+```
+
+To hide extension status messages (from other extensions using `setStatus`):
+
+```json
+{
+  "sections": {
+    "statuses": { "hidden": true }
   }
 }
 ```

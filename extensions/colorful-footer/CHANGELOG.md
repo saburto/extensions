@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+* Extension statuses from `ctx.ui.setStatus()` now appear in the footer (🔌 icon)
+* New `statuses` section in config: customize icon, colors, order, or set `hidden: true` to disable
+
 ## [0.1.0](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.0.3...pi-colorful-footer-v0.1.0) (2026-06-20)
 
 ### Features

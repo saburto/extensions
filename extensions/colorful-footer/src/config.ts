@@ -67,6 +67,7 @@ export interface IconOverrides {
   context?: string;
   cost?: string;
   thinking?: string;
+  statuses?: string;
 }
 
 export interface SectionConfig {
@@ -124,6 +125,7 @@ const DEFAULT_ICONS: Required<IconOverrides> = {
   context:  "\u{1F4CA}",       // 📊 bar chart
   cost:     "\u{1F4B0}",       // 💰 money bag
   thinking: "\u{1F9E0}",       // 🧠 brain
+  statuses: "\u{1F50C}",       // 🔌 electric plug
 };
 
 const DEFAULT_THINKING: Record<string, ThinkingLevelConfig> = {
@@ -144,6 +146,7 @@ const DEFAULT_SECTION_ORDER: Record<string, number> = {
   context:  5,
   cost:     6,
   thinking: 7,
+  statuses: 8,
 };
 
 const DEFAULT_SEPARATOR = " │ ";
@@ -335,6 +338,12 @@ export function resolveSections(config: ColorfulFooterConfig): EffectiveSection[
       icon: icons.thinking,
       hidden: false,
       order: DEFAULT_SECTION_ORDER.thinking,
+    },
+    {
+      key: "statuses",
+      icon: icons.statuses,
+      hidden: false,
+      order: DEFAULT_SECTION_ORDER.statuses,
     },
   ];
 
