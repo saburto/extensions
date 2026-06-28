@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.0](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.0.3...pi-colorful-footer-v0.1.0) (2026-06-28)
+
+
+### Features
+
+* add config ([d8ba4b0](https://github.com/saburto/extensions/commit/d8ba4b0a76b55d80eea12e2b8ba537e306d29dd4))
+* add status sections ([76837b4](https://github.com/saburto/extensions/commit/76837b4666593dbc55cb15d00fd392e30aeea4ed))
+
+
+### Bug Fixes
+
+* cache rate hit ([3405c1a](https://github.com/saburto/extensions/commit/3405c1ae7da412165b9dad069997d3370aa5a131))
+
 ## [Unreleased]
 
 ### Features
