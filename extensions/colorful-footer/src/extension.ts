@@ -249,14 +249,14 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
               // 5. Cache
               case "cache":
                 if (cacheRead > 0) {
-                  const totalInput = cacheRead + tokensIn;
-                  const hitRate = totalInput > 0 ? Math.round((cacheRead / totalInput) * 100) : 0;
+                  const totalInput = tokensIn + cacheRead + cacheWrite;
+                  const hitRate = totalInput > 0 ? (cacheRead / totalInput) * 100 : 0;
                   const cacheColor = hitRate >= 30 ? "text" : "dim";
                   const cacheBg = hitRate >= 30 ? "toolSuccessBg" : "selectedBg";
                   active.push(
                     pill(theme, sec.bgColor, cacheBg,
                       iconFg(sec, theme, cacheColor) + " " +
-                        labelFg(sec, theme, fmtTokens(cacheRead) + " " + hitRate + "%"),
+                        labelFg(sec, theme, fmtTokens(cacheRead) + " " + hitRate.toFixed(1) + "%"),
                     ),
                   );
                 }
@@ -302,6 +302,26 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
                 );
                 break;
               }
+
+              // 9. Extension statuses (from ctx.ui.setStatus in other extensions)
+              case "statuses": {
+                const extStatuses = footerData.getExtensionStatuses();
+                if (extStatuses.size > 0) {
+                  const entries = Array.from(extStatuses.entries())
+                    .sort(([a], [b]) => a.localeCompare(b));
+                  for (const [, text] of entries) {
+                    // Sanitize: remove newlines/tabs, collapse spaces
+                    const sanitized = text.replace(/[\r\n\t]/g, " ").replace(/ +/g, " ").trim();
+                    if (sanitized) {
+                      // Use icon as prefix; status text preserves its own ANSI styling
+                      active.push(
+                        iconFg(sec, theme, "dim", sec.icon + " ") + sanitized,
+                      );
+                    }
+                  }
+                }
+                break;
+              }
             }
           }
 
@@ -315,19 +335,31 @@ export const colorfulFooter = (pi: ExtensionAPI) => {
 
           // Progressively drop sections until the line fits
           let pruned = [...active];
-          // Drop order: context → cache → cost → tokens → thinking → git → folder → model
-          const dropOrder = ["context", "cache", "cost", "tokens", "thinking", "git", "folder"];
+          // Drop order: statuses → context → cache → cost → tokens → thinking → git → folder → model
+          const dropOrder = ["statuses", "context", "cache", "cost", "tokens", "thinking", "git", "folder"];
           for (const sectionKey of dropOrder) {
             if (visibleWidth(line) <= width) break;
-            const idx = pruned.findIndex((s) => {
-              const sec = sections.find(ss => ss.key === sectionKey);
-              if (!sec) return false;
-              // Match by icon
-              return s.includes(sec.icon);
-            });
-            if (idx >= 0) {
-              pruned.splice(idx, 1);
-              line = pruned.join(sepStr);
+            if (sectionKey === "statuses") {
+              // Drop all status entries at once (there can be multiple)
+              const statusSec = sections.find(ss => ss.key === "statuses");
+              if (statusSec) {
+                const filtered = pruned.filter(s => !s.includes(statusSec.icon));
+                if (filtered.length < pruned.length) {
+                  pruned = filtered;
+                  line = pruned.join(sepStr);
+                }
+              }
+            } else {
+              const idx = pruned.findIndex((s) => {
+                const sec = sections.find(ss => ss.key === sectionKey);
+                if (!sec) return false;
+                // Match by icon
+                return s.includes(sec.icon);
+              });
+              if (idx >= 0) {
+                pruned.splice(idx, 1);
+                line = pruned.join(sepStr);
+              }
             }
           }
           // Last resort: drop model (should rarely happen)
