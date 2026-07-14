@@ -13,7 +13,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      colorful_released: ${{ steps.release.outputs['pi-colorful-footer--release_created'] }}
+      colorful_released: ${{ steps.release.outputs['extensions--colorful-footer--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
