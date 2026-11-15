@@ -1,17 +1,19 @@
 # Pi Extensions
 
-A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions managed with pnpm workspaces.
+A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions managed with bun workspaces.
 
 ## Structure
 
 ```
 pi-extensions/
 ├── extensions/          # Individual extension packages
+│   ├── colorful-footer/ # Colorful status footer
 │   ├── pi-launcher/     # Launch pi sessions, tools, or processes
-│   └── mcp-image-saver/ # Auto-save images from tool results
+│   ├── mcp-image-saver/ # Auto-save images from tool results
+│   └── pi-nvim-lsp/     # Neovim LSP bridge
 ├── packages/            # Shared libraries (if any)
 ├── package.json         # Root workspace config
-├── pnpm-workspace.yaml  # pnpm workspace definition
+├── bun.lock             # bun lockfile
 └── tsconfig.json        # Shared TypeScript config
 ```
 
@@ -19,13 +21,13 @@ pi-extensions/
 
 ```bash
 # Install dependencies
-pnpm install
+bun install
 
 # Type-check all extensions
-pnpm typecheck
+bun run typecheck
 
 # Run tests
-pnpm test
+bun run test
 ```
 
 ## Using an Extension

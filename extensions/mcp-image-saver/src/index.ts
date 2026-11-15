@@ -1,3 +1,3 @@
-import { mcpImageSaver } from "@pi-extensions/mcp-image-saver";
+import { mcpImageSaver } from "./extension";
 
 export default mcpImageSaver;

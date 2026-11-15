@@ -1,3 +1,3 @@
-import { piLauncher } from "@pi-extensions/pi-launcher";
+import { piLauncher } from "./extension";
 
 export default piLauncher;
