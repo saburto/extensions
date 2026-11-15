@@ -45,7 +45,8 @@ pi -e ./extensions/pi-launcher/src/index.ts -p "launch something"
 Or install the extensions you want into your pi settings:
 
 ```bash
-pi install ./extensions/pi-launcher
+pi install npm:@saburto/pi-notify-fullscreen   # published extensions
+pi install ./extensions/pi-launcher            # local clone
 ```
 
 ## Creating a New Extension

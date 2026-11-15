@@ -17,7 +17,7 @@
     },
     "extensions/colorful-footer": {
       "name": "@saburto/pi-colorful-footer",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "peerDependencies": {
         "@earendil-works/pi-ai": "*",
         "@earendil-works/pi-coding-agent": "*",
@@ -49,6 +49,18 @@
       "optionalPeers": [
         "@earendil-works/pi-coding-agent",
         "@earendil-works/pi-tui",
+      ],
+    },
+    "extensions/pi-notify-fullscreen": {
+      "name": "@saburto/pi-notify-fullscreen",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "@earendil-works/pi-coding-agent": "*",
+        "@sinclair/typebox": "*",
+      },
+      "optionalPeers": [
+        "@earendil-works/pi-coding-agent",
+        "@sinclair/typebox",
       ],
     },
     "extensions/pi-nvim-lsp": {
@@ -188,6 +200,8 @@
     "@saburto/pi-launcher": ["@saburto/pi-launcher@workspace:extensions/pi-launcher"],
 
     "@saburto/pi-mcp-image-saver": ["@saburto/pi-mcp-image-saver@workspace:extensions/mcp-image-saver"],
+
+    "@saburto/pi-notify-fullscreen": ["@saburto/pi-notify-fullscreen@workspace:extensions/pi-notify-fullscreen"],
 
     "@saburto/pi-nvim-lsp": ["@saburto/pi-nvim-lsp@workspace:extensions/pi-nvim-lsp"],
 

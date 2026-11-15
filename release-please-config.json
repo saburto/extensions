@@ -13,6 +13,10 @@
     "extensions/colorful-footer": {
       "component": "pi-colorful-footer",
       "release-type": "node"
+    },
+    "extensions/pi-notify-fullscreen": {
+      "component": "pi-notify-fullscreen",
+      "release-type": "node"
     }
   }
 }

@@ -21,8 +21,16 @@ you even from another app.
 ## Install
 
 ```bash
-pi install ./extensions/pi-notify-fullscreen          # permanent
-pi -e ./extensions/pi-notify-fullscreen/src/index.ts  # one-off session
+# from npm (installs into your pi settings)
+pi install npm:@saburto/pi-notify-fullscreen
+```
+
+Other ways to load it:
+
+```bash
+pi install git:github.com/saburto/extensions@main   # whole repo, then pick this one
+pi install ./extensions/pi-notify-fullscreen        # local clone
+pi -e npm:@saburto/pi-notify-fullscreen             # one-off session, no install
 ```
 
 ## Usage
