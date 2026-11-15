@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.2.0...pi-colorful-footer-v0.2.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* fixing publisher action ([a9e7fcb](https://github.com/saburto/extensions/commit/a9e7fcba0d796e3b54d850f8fd160051e28b15a1))
+
 ## [0.2.0](https://github.com/saburto/extensions/compare/pi-colorful-footer-v0.1.0...pi-colorful-footer-v0.2.0) (2026-07-13)
 
 
