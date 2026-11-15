@@ -1,0 +1,29 @@
+{
+  "name": "@saburto/pi-notify-fullscreen",
+  "version": "0.0.0",
+  "private": true,
+  "keywords": ["pi-package"],
+  "files": ["src"],
+  "type": "module",
+  "exports": {
+    ".": "./src/extension.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@sinclair/typebox": {
+      "optional": true
+    }
+  },
+  "pi": {
+    "extensions": ["./src/index.ts"]
+  }
+}

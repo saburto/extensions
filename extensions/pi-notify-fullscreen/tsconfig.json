@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@pi-extensions/pi-notify-fullscreen": ["./src/extension.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

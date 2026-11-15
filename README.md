@@ -10,12 +10,16 @@ pi-extensions/
 │   ├── colorful-footer/ # Colorful status footer
 │   ├── pi-launcher/     # Launch pi sessions, tools, or processes
 │   ├── mcp-image-saver/ # Auto-save images from tool results
-│   └── pi-nvim-lsp/     # Neovim LSP bridge
+│   ├── pi-nvim-lsp/     # Neovim LSP bridge
+│   └── pi-notify-fullscreen/ # Fullscreen notifications
 ├── packages/            # Shared libraries (if any)
 ├── package.json         # Root workspace config
 ├── bun.lock             # bun lockfile
 └── tsconfig.json        # Shared TypeScript config
 ```
+
+`pi-notify-fullscreen` wraps the [notify-fullscreen](https://github.com/saburto/notify-fullscreen)
+binary (Linux/X11) to alert you with a fullscreen overlay.
 
 ## Getting Started
 
