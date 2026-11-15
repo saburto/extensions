@@ -7,7 +7,11 @@
     "agent",
     "extensions"
   ],
-  "repository": "https://github.com/saburto/extensions/tree/main/extensions/colorful-footer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saburto/extensions.git",
+    "directory": "extensions/colorful-footer"
+  },
   "files": [
     "src"
   ],

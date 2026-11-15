@@ -2,12 +2,18 @@ name: Publish to npm (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      workspace:
+        description: 'Workspace directory to publish, e.g. extensions/colorful-footer'
+        required: true
+        default: extensions/colorful-footer
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write # Required for npm Trusted Publishing (OIDC)
     steps:
       - uses: actions/checkout@v4
 
@@ -17,12 +23,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - run: bun install --frozen-lockfile
 
-      - name: Publish @saburto/pi-colorful-footer
-        run: npm publish --workspace extensions/colorful-footer --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish ${{ inputs.workspace }}
+        run: npm publish --workspace "${{ inputs.workspace }}" --access public

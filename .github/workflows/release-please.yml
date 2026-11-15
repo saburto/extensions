@@ -23,11 +23,16 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   publish:
+    # Runs after release-please bumps the version and creates a release.
     needs: release-please
     if: ${{ needs.release-please.outputs.colorful_released == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Required for npm Trusted Publishing (OIDC). No npm token needed:
+      # npm exchanges the short-lived GitHub OIDC token and generates
+      # provenance attestations automatically.
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -37,12 +42,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false # never use caching in release builds
 
       - run: bun install --frozen-lockfile
 
       - name: Publish @saburto/pi-colorful-footer
-        run: npm publish --workspace extensions/colorful-footer --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace extensions/colorful-footer --access public
