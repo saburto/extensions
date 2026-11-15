@@ -13,7 +13,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      colorful_released: ${{ steps.release.outputs['extensions--colorful-footer--release_created'] }}
+      # paths_released is a JSON array of workspace paths that got a release
+      released_paths: ${{ steps.release.outputs.paths_released }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -25,7 +26,9 @@ jobs:
   publish:
     # Runs after release-please bumps the version and creates a release.
     needs: release-please
-    if: ${{ needs.release-please.outputs.colorful_released == 'true' }}
+    # Only run when colorful-footer was actually released. The path keeps its
+    # `/` — release-please sets outputs as `<path>--release_created`.
+    if: ${{ contains(fromJSON(needs.release-please.outputs.released_paths), 'extensions/colorful-footer') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
