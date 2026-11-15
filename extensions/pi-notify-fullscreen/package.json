@@ -1,8 +1,12 @@
 {
   "name": "@saburto/pi-notify-fullscreen",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "keywords": ["pi-package"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saburto/extensions.git",
+    "directory": "extensions/pi-notify-fullscreen"
+  },
   "files": ["src"],
   "type": "module",
   "exports": {

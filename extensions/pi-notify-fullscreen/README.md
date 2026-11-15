@@ -9,7 +9,7 @@ you even from another app.
 
 <video src="./docs/demo.mp4" controls muted width="720"></video>
 
-[▶ Watch the demo (31s)](./docs/demo.mp4)
+[▶ Watch the demo (31s)](https://github.com/saburto/extensions/blob/main/extensions/pi-notify-fullscreen/docs/demo.mp4)
 
 ## Requirements
 
